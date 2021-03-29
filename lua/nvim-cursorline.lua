@@ -5,6 +5,7 @@ local cursor = 1
 local window = 2
 local status = cursor
 local timer = vim.loop.new_timer()
+local old_line = nil
 
 vim.wo.cursorline = true
 
@@ -48,11 +49,16 @@ function M.matchadd()
 end
 
 function M.cursor_moved()
+  local line = vim.api.nvim_get_current_line()
+  if old_line ~= nil and line == old_line then
+    return
+  end
   M.matchadd()
   if status == window then
     status = cursor
     return
   end
+  old_line = line
   M.timer_start()
   if status == cursor then
     -- vim.wo.cursorline = false
@@ -73,18 +79,24 @@ function M.win_leave()
 end
 
 function M.timer_start()
-  timer:start(
-    1000,
-    0,
-    vim.schedule_wrap(
-      function()
-        -- vim.wo.cursorline = true
-        vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
-        vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
-        status = cursor
-      end
+  if vim.g.cursorline_delay > 0 then
+    timer:start(
+      vim.g.cursorline_delay or 1000,
+      0,
+      vim.schedule_wrap(
+        function()
+          -- vim.wo.cursorline = true
+          vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
+          vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
+          status = cursor
+        end
+      )
     )
-  )
+  else
+    vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
+    vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
+    status = disabled
+  end
 end
 
 return M

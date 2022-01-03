@@ -42,7 +42,7 @@ function M.matchadd()
   if cursorword == "" or #cursorword > 100 or #cursorword < 3 or string.find(cursorword, "[\192-\255]+") ~= nil then
     return
   end
-  local pattern = [[\<]] .. cursorword .. [[\>]]
+  local pattern = [[\<]] .. cursorword:gsub("~", "\\~") .. [[\>]]
   vim.w.cursorword_id = vim.fn.matchadd("CursorWord", pattern, -1)
   vim.w.cursorword_match = 1
 end
